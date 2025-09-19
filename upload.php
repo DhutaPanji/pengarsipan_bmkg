@@ -1,5 +1,3 @@
-<h1 class="text-2xl font-bold mb-6">Tambah Data</h1>
-
 <!-- Konten -->
 <main class="flex-1 flex items-start justify-center p-6 mt-10">
   <!-- Card Upload -->
