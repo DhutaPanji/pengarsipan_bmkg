@@ -1,4 +1,49 @@
+<?php
+// arsip.php
+include "config.php";
+
+// Hapus surat jika ada action=hapus
+if (isset($_GET['action'], $_GET['id']) && $_GET['action'] === 'hapus') {
+  $id = intval($_GET['id']);
+  $delete = $conn->query("DELETE FROM surat WHERE id=$id");
+
+  $_SESSION['flash'] = [
+    'status' => $delete ? 'success' : 'error',
+    'message' => $delete ? 'Surat berhasil dihapus!' : 'Surat gagal dihapus!'
+  ];
+
+  header("Location: ?page=arsip");
+  exit;
+}
+
+// Ambil semua data dari tabel surat
+$sql = "SELECT * FROM surat ORDER BY created_at DESC";
+$result = $conn->query($sql);
+$arsip = [];
+if ($result && $result->num_rows > 0) {
+  while ($row = $result->fetch_assoc()) {
+    $arsip[] = $row;
+  }
+}
+?>
+
 <h1 class="text-2xl font-bold mb-6">Arsip Surat</h1>
+
+<?php if (isset($_SESSION['flash'])): ?>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      Swal.fire({
+        icon: '<?= $_SESSION['flash']['status'] ?>',
+        title: '<?= $_SESSION['flash']['status'] === 'success' ? 'Berhasil' : 'Gagal' ?>',
+        text: '<?= $_SESSION['flash']['message'] ?>',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    });
+  </script>
+  <?php unset($_SESSION['flash']); ?>
+<?php endif; ?>
 
 <div class="bg-white shadow rounded-lg p-6">
   <div class="flex items-center justify-between mb-4">
@@ -17,33 +62,39 @@
         </tr>
       </thead>
       <tbody class="text-sm">
-        <?php foreach ($arsip as $i => $r): ?>
-          <tr class="border-t">
-            <td class="p-3"><?= $i+1 ?></td>
-            <td class="p-3"><?= htmlspecialchars($r['tanggal']) ?></td>
-            <td class="p-3"><?= htmlspecialchars($r['nomor_surat']) ?></td>
-            <td class="p-3"><?= htmlspecialchars($r['perihal']) ?></td>
-            <td class="p-3">
-              <div class="flex items-center justify-center gap-2">
-                <a href="?page=arsip&action=lihat&id=<?= $r['id'] ?>" 
-                   class="px-3 py-1 rounded text-white bg-sky-500 hover:bg-sky-600">Lihat</a>
-                <a href="?page=arsip&action=edit&id=<?= $r['id'] ?>" 
-                   class="px-3 py-1 rounded text-white bg-amber-400 hover:bg-amber-500">Edit</a>
-                <button type="button" 
-                        class="btn-hapus px-3 py-1 rounded text-white bg-red-500 hover:bg-red-600"
-                        data-id="<?= $r['id'] ?>">
-                  Hapus
-                </button>
-              </div>
-            </td>
+        <?php if (!empty($arsip)): ?>
+          <?php foreach ($arsip as $i => $r): ?>
+            <tr class="border-t">
+              <td class="p-3"><?= $i+1 ?></td>
+              <td class="p-3"><?= htmlspecialchars($r['tanggal']) ?></td>
+              <td class="p-3"><?= htmlspecialchars($r['nomor_surat']) ?></td>
+              <td class="p-3"><?= htmlspecialchars($r['perihal']) ?></td>
+              <td class="p-3">
+                <div class="flex items-center justify-center gap-2">
+                  <a href="?page=arsip&action=lihat&id=<?= $r['id'] ?>" 
+                     class="px-3 py-1 rounded text-white bg-sky-500 hover:bg-sky-600">Lihat</a>
+                  <a href="?page=arsip&action=edit&id=<?= $r['id'] ?>" 
+                     class="px-3 py-1 rounded text-white bg-amber-400 hover:bg-amber-500">Edit</a>
+                  <button type="button" 
+                          class="btn-hapus px-3 py-1 rounded text-white bg-red-500 hover:bg-red-600"
+                          data-id="<?= $r['id'] ?>">
+                    Hapus
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <tr>
+            <td colspan="5" class="text-center p-4 text-gray-500">Belum ada data surat</td>
           </tr>
-        <?php endforeach; ?>
+        <?php endif; ?>
       </tbody>
     </table>
   </div>
 </div>
 
-<!-- Tambahkan SweetAlert2 dan JS -->
+<!-- Tambahkan SweetAlert2 untuk tombol hapus -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.querySelectorAll('.btn-hapus').forEach(btn => {
