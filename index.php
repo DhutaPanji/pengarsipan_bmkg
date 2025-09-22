@@ -6,7 +6,7 @@ include __DIR__ . "/config.php";
 // Ambil semua data surat
 $arsip = [];
 $sql = "SELECT id, tanggal, nomor_surat, perihal FROM surat ORDER BY tanggal DESC";
-$result = mysqli_query($koneksi, $sql);
+$result = mysqli_query($conn, $sql);
 
 if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {
