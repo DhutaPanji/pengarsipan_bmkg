@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Simpan ke database
             $sql = "INSERT INTO surat (tanggal, nomor_surat, perihal, file_pdf) VALUES (?, ?, ?, ?)";
-            $stmt = mysqli_prepare($koneksi, $sql);
+            $stmt = mysqli_prepare($conn, $sql);
             mysqli_stmt_bind_param($stmt, "ssss", $tanggal, $nomor, $perihal, $fileName);
             mysqli_stmt_execute($stmt);
         }
