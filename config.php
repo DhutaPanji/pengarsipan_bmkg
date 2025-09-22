@@ -4,8 +4,9 @@ $user = "root";
 $pass = "";
 $db   = "arsip_bmkg";
 
-$koneksi = mysqli_connect($host, $user, $pass, $db);
+$conn = mysqli_connect($host, $user, $pass, $db);
 
-if (!$koneksi) {
+if (!$conn) {
     die("Koneksi database gagal: " . mysqli_connect_error());
 }
+
