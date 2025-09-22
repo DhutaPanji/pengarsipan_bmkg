@@ -9,47 +9,65 @@ $flash = null;
 
 // Jika form di-submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_FILES['fileSurat']) && $_FILES['fileSurat']['error'] === 0) {
-        $fileTmp  = $_FILES['fileSurat']['tmp_name'];
-        $fileName = $_FILES['fileSurat']['name'];
-
-        // Validasi hanya PDF
-        $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-        if ($ext !== 'pdf') {
-            $_SESSION['flash'] = ['msg' => 'Hanya file PDF yang diizinkan!', 'type' => 'error'];
-            header("Location: ?page=tambah");
-            exit;
-        }
+    if (isset($_FILES['fileSurat'])) {
+        $totalFiles = count($_FILES['fileSurat']['name']);
+        $successCount = 0;
+        $errorCount = 0;
 
         // Buat folder uploads jika belum ada
         $targetDir = __DIR__ . "/uploads/";
         if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
 
-        // Pindahkan file
-        $targetFile = $targetDir . basename($fileName);
-        move_uploaded_file($fileTmp, $targetFile);
+        for ($i = 0; $i < $totalFiles; $i++) {
+            if ($_FILES['fileSurat']['error'][$i] === 0) {
+                $fileTmp  = $_FILES['fileSurat']['tmp_name'][$i];
+                $fileName = $_FILES['fileSurat']['name'][$i];
 
-        // Ambil data dari nama file
-        $namaTanpaExt = pathinfo($fileName, PATHINFO_FILENAME);
-        $parts = explode("_", $namaTanpaExt, 4);
+                // Validasi hanya PDF
+                $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                if ($ext !== 'pdf') {
+                    $errorCount++;
+                    continue;
+                }
 
-        if (count($parts) >= 4) {
-            $tanggal = date("Y-m-d", strtotime($parts[0]));
-            $nomor   = $parts[1];
-            $kode    = $parts[2];
-            $perihal = $parts[3];
+                // Pindahkan file
+                $targetFile = $targetDir . basename($fileName);
+                if (move_uploaded_file($fileTmp, $targetFile)) {
+                    // Ambil data dari nama file
+                    $namaTanpaExt = pathinfo($fileName, PATHINFO_FILENAME);
+                    $parts = explode("_", $namaTanpaExt, 4);
 
-            // Simpan ke database
-            $sql = "INSERT INTO surat (tanggal, nomor_surat, perihal, file_pdf) VALUES (?, ?, ?, ?)";
-            $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "ssss", $tanggal, $nomor, $perihal, $fileName);
-            mysqli_stmt_execute($stmt);
+                    if (count($parts) >= 4) {
+                        $tanggal = date("Y-m-d", strtotime($parts[0]));
+                        $nomor   = $parts[1];
+                        $kode    = $parts[2];
+                        $perihal = $parts[3];
+
+                        // Simpan ke database
+                        $sql = "INSERT INTO surat (tanggal, nomor_surat, perihal, file_pdf) VALUES (?, ?, ?, ?)";
+                        $stmt = mysqli_prepare($conn, $sql);
+                        mysqli_stmt_bind_param($stmt, "ssss", $tanggal, $nomor, $perihal, $fileName);
+                        mysqli_stmt_execute($stmt);
+                    }
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                }
+            } else {
+                $errorCount++;
+            }
         }
 
-        // Flash message sukses
-        $_SESSION['flash'] = ['msg' => 'Berhasil Mengunggah Surat', 'type' => 'success'];
+        // Buat flash message
+        if ($successCount > 0 && $errorCount === 0) {
+            $_SESSION['flash'] = ['msg' => "$successCount file berhasil diunggah.", 'type' => 'success'];
+        } elseif ($successCount > 0 && $errorCount > 0) {
+            $_SESSION['flash'] = ['msg' => "$successCount file berhasil, $errorCount gagal.", 'type' => 'warning'];
+        } else {
+            $_SESSION['flash'] = ['msg' => 'Semua file gagal diunggah.', 'type' => 'error'];
+        }
 
-        // Redirect ke halaman yang sama agar flash bisa ditampilkan
+        // Redirect
         header("Location: ?page=tambah");
         exit;
     }
@@ -72,13 +90,17 @@ if (!empty($_SESSION['flash'])) {
         PILIH FILE SURAT (PDF)
       </label>
 
-      <input type="file" name="fileSurat" accept=".pdf" required
+      <input type="file" name="fileSurat[]" accept=".pdf" multiple required
         class="block w-full text-sm text-gray-500
                file:mr-4 file:py-2 file:px-4
                file:rounded-l-md file:border-0
                file:text-sm file:font-semibold
                file:bg-gray-100 file:text-gray-700
                hover:file:bg-gray-200">
+
+      <p class="text-xs text-gray-500 mt-1">
+        👉 Anda dapat memilih lebih dari satu file dengan menekan <b>CTRL</b> (Windows) atau <b>Command</b> (Mac) saat memilih file.
+      </p>
 
       <p class="text-xs text-gray-500">
         Nama file: <span class="font-mono">YYYYMMDD_NomorSurat_KodeSurat_PerihalSurat.pdf</span>
@@ -101,8 +123,8 @@ if (!empty($_SESSION['flash'])) {
 <?php if ($flash): ?>
 <script>
 Swal.fire({
-  icon: '<?= $flash['type'] === 'success' ? 'success' : 'error' ?>',
-  title: '<?= $flash['type'] === 'success' ? 'Berhasil' : 'Gagal' ?>',
+  icon: '<?= $flash['type'] === 'success' ? 'success' : ($flash['type'] === 'warning' ? 'warning' : 'error') ?>',
+  title: '<?= ucfirst($flash['type']) ?>',
   text: '<?= $flash['msg'] ?>',
   confirmButtonText: 'OK'
 });
