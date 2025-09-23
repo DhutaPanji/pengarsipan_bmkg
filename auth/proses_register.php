@@ -1,41 +1,40 @@
 <?php
-// koneksi ke database
-$host = "localhost";
-$user = "root"; // default XAMPP
-$pass = "";     // default XAMPP (kosong)
-$db   = "db_aplikasi"; // ganti dengan nama database kamu
+session_start();
+include '../config.php';
 
-$conn = new mysqli($host, $user, $pass, $db);
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $username = trim($_POST['username']);
+    $email    = trim($_POST['email']);
+    $password = trim($_POST['password']);
 
-// cek koneksi
-if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
+    if ($username == "" || $email == "" || $password == "") {
+        $_SESSION['error'] = "Semua field wajib diisi!";
+        header("Location: register.php");
+        exit;
+    }
+
+    $cek = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $cek->bind_param("s", $email);
+    $cek->execute();
+    $result = $cek->get_result();
+
+    if ($result->num_rows > 0) {
+        $_SESSION['error'] = "Email sudah terdaftar!";
+        header("Location: register.php");
+        exit;
+    }
+
+    $hashed = password_hash($password, PASSWORD_DEFAULT);
+    $role = "user";
+
+    $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $username, $email, $hashed, $role);
+
+    if ($stmt->execute()) {
+        $_SESSION['success'] = "Registrasi berhasil! Silakan login.";
+        header("Location: login.php");
+    } else {
+        $_SESSION['error'] = "Terjadi kesalahan: " . $conn->error;
+        header("Location: register.php");
+    }
 }
-
-// ambil data dari form
-$username   = $_POST['username'];
-$email      = $_POST['email'];
-$password   = $_POST['password'];
-$confirm    = $_POST['confirm_password'];
-
-// validasi password sama
-if ($password !== $confirm) {
-    header("Location: register.php?status=error&msg=Password tidak sama!");
-    exit;
-}
-
-// enkripsi password
-$hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-// simpan ke database
-$stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-$stmt->bind_param("sss", $username, $email, $hashed_password);
-
-if ($stmt->execute()) {
-    header("Location: register.php?status=success&msg=Registrasi berhasil, silakan login.");
-} else {
-    header("Location: register.php?status=error&msg=Gagal registrasi: " . $conn->error);
-}
-
-$stmt->close();
-$conn->close();
