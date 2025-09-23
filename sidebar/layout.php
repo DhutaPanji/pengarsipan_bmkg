@@ -1,3 +1,15 @@
+<?php
+session_start();
+
+// Cek login (optional, sesuaikan kebutuhanmu)
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../auth/login.php");
+    exit();
+}
+
+// Ambil parameter page dari URL, default = dashboard
+$page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
+?>
 <!doctype html>
 <html lang="id">
 <head>
