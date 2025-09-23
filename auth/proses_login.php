@@ -1,33 +1,35 @@
 <?php
 session_start();
-include "../config.php"; // sesuaikan path ke config.php
+include '../config.php'; // koneksi database
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = trim($_POST['username']);
     $password = $_POST['password'];
 
-    $query = "SELECT * FROM users WHERE username='$username' LIMIT 1";
-    $result = mysqli_query($conn, $query);
+    // ambil data user berdasarkan username
+    $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    if ($result && mysqli_num_rows($result) > 0) {
-        $user = mysqli_fetch_assoc($result);
+    if ($result->num_rows === 1) {
+        $data = $result->fetch_assoc();
 
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id']  = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['role']     = $user['role'];
+        // verifikasi password
+        if (password_verify($password, $data['password'])) {
+            $_SESSION['user_id']  = $data['id'];
+            $_SESSION['username'] = $data['username'];
 
-            header("Location: ../index.php?page=dashboard");
-            exit;
+           header("Location: ../sidebar/layout.php?page=dashboard");
+            exit();
         } else {
-            header("Location: login.php?error=Password salah!");
-            exit;
+            $_SESSION['error'] = "Password salah.";
+            header("Location: login.php");
+            exit();
         }
     } else {
-        header("Location: login.php?error=Username tidak ditemukan!");
-        exit;
+        $_SESSION['error'] = "Username tidak ditemukan.";
+        header("Location: login.php");
+        exit();
     }
-} else {
-    header("Location: login.php");
-    exit;
 }
