@@ -1,6 +1,6 @@
 <?php
 // koneksi ke database
-$conn = new mysqli("localhost", "root", "", "db_surat");
+$conn = new mysqli("localhost", "root", "", "arsip_bmkg");
 
 // cek koneksi
 if ($conn->connect_error) {
@@ -8,9 +8,9 @@ if ($conn->connect_error) {
 }
 
 // ambil data total, masuk, keluar
-$total  = $conn->query("SELECT COUNT(*) as jml FROM arsip")->fetch_assoc()['jml'];
-$masuk  = $conn->query("SELECT COUNT(*) as jml FROM arsip WHERE jenis_surat='masuk'")->fetch_assoc()['jml'];
-$keluar = $conn->query("SELECT COUNT(*) as jml FROM arsip WHERE jenis_surat='keluar'")->fetch_assoc()['jml'];
+$total  = $conn->query("SELECT COUNT(*) as jml FROM surat")->fetch_assoc()['jml'];
+$masuk  = $conn->query("SELECT COUNT(*) as jml FROM surat WHERE jenis='masuk'")->fetch_assoc()['jml'];
+$keluar = $conn->query("SELECT COUNT(*) as jml FROM surat WHERE jenis='keluar'")->fetch_assoc()['jml'];
 ?>
 
 <!DOCTYPE html>
