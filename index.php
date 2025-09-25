@@ -21,3 +21,4 @@ $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
 // Panggil layout utama
 include __DIR__ . "/sidebar/layout.php";
+include _DIR_ . "/sidebar/navbar.php";
