@@ -70,7 +70,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
       <?php include __DIR__ . '/../sidebar/navbar.php'; ?>  
 
       <!-- CONTENT -->
-      <main class="p-6 mt-20"> 
+      <main class="p-6 pt-20"> 
         <?php
           if ($page === 'dashboard') {
             include __DIR__ . '/../dashboard.php';
