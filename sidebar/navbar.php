@@ -7,8 +7,12 @@ if (!isset($_SESSION['username'])) {
 $username = $_SESSION['username'];
 ?>
 
+<!-- Boxicons untuk icon -->
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
 <nav class="bg-white shadow px-6 py-3 flex items-center justify-between fixed top-0 left-64 right-0 z-50 h-20">
-   <div class="flex-1"></div>
+  <div class="flex-1"></div>
+
   <!-- Profil + Dropdown -->
   <div class="relative">
     <button id="dropdownButton" class="flex items-center space-x-2 focus:outline-none">
@@ -32,9 +36,9 @@ $username = $_SESSION['username'];
 
     <!-- Dropdown Menu -->
     <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg">
-      <a href="profil.php" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profil</a>
-      <hr class="my-1">
-      <a href="logout.php" class="block px-4 py-2 text-red-600 hover:bg-red-100">Logout</a>
+      <a href="../auth/logout.php" class="flex items-center px-4 py-2 text-red-600 hover:bg-red-100">
+        <i class='bx bx-log-out text-lg mr-2'></i> Logout
+      </a>
     </div>
   </div>
 </nav>
