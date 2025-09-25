@@ -81,7 +81,7 @@ if (!empty($_SESSION['flash'])) {
 ?>
 
 <!-- HTML Tampilan Form -->
-<main class="flex-1 flex items-start justify-center p-6 mt-10">
+<main class="flex-1 flex items-start justify-center p-6">
   <div class="bg-white p-10 rounded-xl shadow-md w-full max-w-2xl">
     <h2 class="text-2xl font-semibold text-center mb-6">Unggah File Surat</h2>
 
