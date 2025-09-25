@@ -57,8 +57,6 @@ if ($result && $result->num_rows > 0) {
 <!-- Tambahkan Boxicons -->
 <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 
-<h1 class="text-2xl font-bold mb-6">Arsip Surat</h1>
-
 <?php if (isset($_SESSION['flash'])): ?>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
