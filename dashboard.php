@@ -23,8 +23,6 @@ $keluar = $conn->query("SELECT COUNT(*) as jml FROM surat WHERE jenis='keluar'")
 </head>
 <body class="bg-gray-100 p-6">
 
-  <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
-
   <!-- Tampilkan kartu jumlah -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="bg-blue-500 text-white p-6 rounded-2xl shadow-lg">
