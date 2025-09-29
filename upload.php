@@ -6,6 +6,8 @@ include __DIR__ . "/config.php";
 
 // Variabel flash untuk pesan
 $flash = null;
+$doRedirect = false;      // <--- flag untuk redirect via JS
+$redirectUrl = '?page=tambah';
 
 // Jika form di-submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -67,9 +69,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['flash'] = ['msg' => 'Semua file gagal diunggah.', 'type' => 'error'];
         }
 
-        // Redirect
-        header("Location: ?page=tambah");
-        exit;
+        // Jangan pakai header() di sini — karena navbar/layout sudah mengeluarkan HTML.
+        // Gunakan JS redirect setelah flash (Swal) ditutup:
+        $doRedirect = true;
     }
 }
 
@@ -80,7 +82,7 @@ if (!empty($_SESSION['flash'])) {
 }
 ?>
 
-<!-- HTML Tampilan Form -->
+<!-- HTML Tampilan Form (TIDAK DIRUBAH) -->
 <main class="flex-1 flex items-start justify-center p-6">
   <div class="bg-white p-10 rounded-xl shadow-md w-full max-w-2xl">
     <h2 class="text-2xl font-semibold text-center mb-6">Unggah File Surat</h2>
@@ -123,10 +125,15 @@ if (!empty($_SESSION['flash'])) {
 <?php if ($flash): ?>
 <script>
 Swal.fire({
-  icon: '<?= $flash['type'] === 'success' ? 'success' : ($flash['type'] === 'warning' ? 'warning' : 'error') ?>',
-  title: '<?= ucfirst($flash['type']) ?>',
-  text: '<?= $flash['msg'] ?>',
+  icon: <?= json_encode($flash['type'] === 'success' ? 'success' : ($flash['type'] === 'warning' ? 'warning' : 'error')) ?>,
+  title: <?= json_encode(ucfirst($flash['type'])) ?>,
+  text: <?= json_encode($flash['msg']) ?>,
   confirmButtonText: 'OK'
+}).then(() => {
+  <?php if (!empty($doRedirect) && $doRedirect): ?>
+    // redirect via JS (menghindari header() setelah output)
+    window.location.href = <?= json_encode($redirectUrl) ?>;
+  <?php endif; ?>
 });
 </script>
 <?php endif; ?>
