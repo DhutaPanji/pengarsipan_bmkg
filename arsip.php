@@ -1,6 +1,13 @@
 <?php
 // arsip.php
+if (session_status() === PHP_SESSION_NONE) {
+  session_start();
+}
+
 include "config.php";
+
+$doRedirect = false;
+$redirectUrl = '?page=arsip';
 
 // Hapus surat
 if (isset($_GET['action'], $_GET['id']) && $_GET['action'] === 'hapus') {
@@ -14,13 +21,14 @@ if (isset($_GET['action'], $_GET['id']) && $_GET['action'] === 'hapus') {
     unlink("uploads/$file");
   }
 
+  // set flash
   $_SESSION['flash'] = [
     'status' => $delete ? 'success' : 'error',
     'message' => $delete ? 'Surat berhasil dihapus!' : 'Surat gagal dihapus!'
   ];
 
-  header("Location: ?page=arsip");
-  exit;
+  // jangan pakai header() — gunakan JS redirect agar tidak memicu "headers already sent"
+  $doRedirect = true;
 }
 
 // Update surat
@@ -39,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     'message' => $ok ? 'Surat berhasil diperbarui!' : 'Gagal memperbarui surat!'
   ];
 
-  header("Location: ?page=arsip");
-  exit;
+  // jangan pakai header() — gunakan JS redirect
+  $doRedirect = true;
 }
 
 // Ambil semua data
@@ -52,25 +60,34 @@ if ($result && $result->num_rows > 0) {
     $arsip[] = $row;
   }
 }
+
+// Ambil flash jika ada (untuk ditampilkan di JS)
+$flash = isset($_SESSION['flash']) ? $_SESSION['flash'] : null;
+// unset session flash sekarang — kita sudah salin ke $flash
+if (isset($_SESSION['flash'])) unset($_SESSION['flash']);
 ?>
 
 <!-- Tambahkan Boxicons -->
 <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 
-<?php if (isset($_SESSION['flash'])): ?>
+<?php if ($flash): ?>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       Swal.fire({
-        icon: '<?= $_SESSION['flash']['status'] ?>',
-        title: '<?= $_SESSION['flash']['status'] === 'success' ? 'Berhasil' : 'Gagal' ?>',
-        text: '<?= $_SESSION['flash']['message'] ?>',
+        icon: <?= json_encode($flash['status']) ?>,
+        title: <?= json_encode($flash['status'] === 'success' ? 'Berhasil' : 'Gagal') ?>,
+        text: <?= json_encode($flash['message']) ?>,
         showConfirmButton: false,
         timer: 1500
+      }).then(() => {
+        <?php if ($doRedirect): ?>
+          // redirect via JS untuk menghindari header() setelah output
+          window.location.href = <?= json_encode($redirectUrl) ?>;
+        <?php endif; ?>
       });
     });
   </script>
-  <?php unset($_SESSION['flash']); ?>
 <?php endif; ?>
 
 <div class="bg-white shadow-lg rounded-lg p-6">
@@ -99,18 +116,19 @@ if ($result && $result->num_rows > 0) {
               <td class="px-4 py-3 border border-gray-300"><?= htmlspecialchars($r['perihal']) ?></td>
               <td class="px-4 py-3 border border-gray-300">
                 <div class="flex items-center justify-center gap-2">
-                  <!-- Tombol Lihat -->
-                  <?php if (!empty($r['file_pdf'])): ?>
-                    <a href="uploads/<?= htmlspecialchars($r['file_pdf']) ?>" target="_blank"
-                       class="px-3 py-1 rounded-lg text-white bg-sky-500 hover:bg-sky-600 transition flex items-center gap-1">
-                      <i class='bx bx-show text-lg'></i> Lihat
-                    </a>
-                  <?php else: ?>
-                    <button type="button"
-                            class="px-3 py-1 rounded-lg text-white bg-gray-400 cursor-not-allowed flex items-center gap-1" disabled>
-                      <i class='bx bx-show text-lg'></i> Tidak Ada File
-                    </button>
-                  <?php endif; ?>
+<!-- Tombol Lihat -->
+<?php if (!empty($r['file_pdf'])): ?>
+  <a href="../uploads/<?= htmlspecialchars($r['file_pdf']) ?>" target="_blank"
+     class="px-3 py-1 rounded-lg text-white bg-sky-500 hover:bg-sky-600 transition flex items-center gap-1">
+    <i class='bx bx-show text-lg'></i> Lihat
+  </a>
+<?php else: ?>
+  <button type="button"
+          class="px-3 py-1 rounded-lg text-white bg-gray-400 cursor-not-allowed flex items-center gap-1" disabled>
+    <i class='bx bx-show text-lg'></i> Tidak Ada File
+  </button>
+<?php endif; ?>
+
 
                   <!-- Tombol Edit -->
                   <button type="button"
